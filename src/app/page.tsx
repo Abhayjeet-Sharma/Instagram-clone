@@ -84,11 +84,11 @@ export default function Home() {
   }
   return (
     <div>
-      <div className="fixed top-0 flex p-4 gap-8 border border-gray-200 bg-white">
+      {/* <div className="fixed top-0 flex p-4 gap-8 border border-gray-200 bg-white">
         {Array.from({ length: 12 }).map((_, index) => (
           <Story key={index} />
         ))}
-      </div>
+      </div> */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Instagram Clone</h1>

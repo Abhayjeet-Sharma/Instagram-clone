@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function UploadPage() {
   const [caption, setCaption] = useState("");
@@ -64,6 +65,7 @@ export default function UploadPage() {
 
   return (
     <main className="max-w-xl mx-auto p-8">
+      <h2><Link href='/'>Back to feed</Link></h2>
       <h1 className="text-2xl font-bold mb-6">
         Create Post
       </h1>
