@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import LikeButton from "./LikeButton";
+import Comments from "./Comments";
 
 export const instant = false;
 
@@ -17,10 +18,7 @@ export default async function PostImagePage({ params }: Props) {
 
   return (
     <main className="min-h-screen flex flex-col items-center p-6">
-      <Link
-        href="/"
-        className="mb-6 text-blue-600 hover:underline"
-      >
+      <Link href="/" className="mb-6 text-blue-600 hover:underline">
         ← Back to feed
       </Link>
 
@@ -31,10 +29,10 @@ export default async function PostImagePage({ params }: Props) {
       />
 
       <LikeButton postId={id} />
+      <Comments postId={id} />
+      <p className="mt-4 text-gray-500">Post #{id}</p>
 
-      <p className="mt-4 text-gray-500">
-        Post #{id}
-      </p>
+      <p className="mt-4 text-gray-500">Post #{id}</p>
     </main>
   );
 }

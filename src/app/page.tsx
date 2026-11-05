@@ -1,7 +1,5 @@
 "use client";
 import Image from "next/image";
-import Story from "./UI/story";
-import Reel from "./UI/reels";
 import { useEffect, useState } from "react";
 
 interface Post {
