@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Reels from "./components/Reels";
 
 interface Post {
   id: string;
@@ -109,33 +110,13 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {posts.map((post) => (
-              <div
-                key={post.id}
-                className="border rounded-xl overflow-hidden shadow-sm"
-              >
-                <a href={`/post/${post.id}/image`}>
-                  <img
-                    src={`/api/posts/${post.id}/image`}
-                    alt={post.caption || "Instagram post"}
-                    className="w-full aspect-square object-cover cursor-pointer"
-                  />
-                </a>
-
-                <div className="p-4">
-                  <p className="font-medium break-words">{post.caption}</p>
-
-                  <p className="text-sm text-gray-500 mt-2">
-                    {new Date(post.created_at).toLocaleString()}
-                  </p>
-
-                  <button
+              <div key={post.id}><Reels post={post}/> 
+              <button
                     onClick={() => handleDelete(post.id)}
                     className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
                   >
                     Delete
-                  </button>
-                </div>
-              </div>
+                  </button></div>
             ))}
           </div>
         )}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import LikeButton from "./LikeButton";
 import Comments from "./Comments";
+import SaveButton from "./SaveButton";
 
 export const instant = false;
 
@@ -29,9 +30,8 @@ export default async function PostImagePage({ params }: Props) {
       />
 
       <LikeButton postId={id} />
+      <SaveButton postId={id}/>
       <Comments postId={id} />
-      <p className="mt-4 text-gray-500">Post #{id}</p>
-
       <p className="mt-4 text-gray-500">Post #{id}</p>
     </main>
   );
