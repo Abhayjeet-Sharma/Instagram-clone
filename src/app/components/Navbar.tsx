@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -59,9 +58,7 @@ export default function Navbar() {
       router.push("/login");
       router.refresh();
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
+      setError(error instanceof Error ? error.message : "Something went wrong");
     }
   }
 
@@ -88,10 +85,9 @@ export default function Navbar() {
             <Link href="/upload" className="hover:text-blue-600">
               Upload
             </Link>
-
-            <span className="font-medium">
-              @{user.username}
-            </span>
+            <Link href={`/profile/${encodeURIComponent(user.username)}`}>
+              <span className="font-medium">@{user.username}</span>
+            </Link>
 
             <button
               onClick={handleLogout}
@@ -116,9 +112,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {error && (
-        <p className="text-red-500 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </nav>
   );
 }
