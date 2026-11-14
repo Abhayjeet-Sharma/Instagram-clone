@@ -10,11 +10,45 @@ interface Post {
   image_size: string;
   created_at: string;
 }
+interface Reel {
+  id: string;
+  user_id: string;
+  caption: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  video_type: string;
+  video_size: string;
+  duration_seconds: string;
+  views_count: string;
+  created_at: string;
+}
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reels, setReels] = useState<Reel[]>([]);
+const [reelsLoading, setReelsLoading] = useState(true);
+
+async function fetchReels() {
+  try {
+    const response = await fetch("/api/reels", {
+      cache: "no-store",
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to fetch reels");
+    }
+
+    setReels(data.reels);
+  } catch (error) {
+    console.error("Fetch reels error:", error);
+  } finally {
+    setReelsLoading(false);
+  }
+}
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this post?",
@@ -67,6 +101,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts();
+    fetchReels();
   }, []);
 
   if (loading) {
@@ -119,6 +154,37 @@ export default function Home() {
             ))}
           </div>
         )}
+        {/* Reels Section */}
+<section className="mb-10">
+  <h2 className="text-xl font-semibold mb-4">Reels</h2>
+
+  {reelsLoading ? (
+    <p>Loading reels...</p>
+  ) : reels.length === 0 ? (
+    <p className="text-gray-500">No reels uploaded yet.</p>
+  ) : (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {reels.map((reel) => (
+        <div key={reel.id} className="border rounded-lg p-3">
+          <video
+            src={reel.video_url}
+            poster={reel.thumbnail_url || undefined}
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full aspect-[9/16] object-contain bg-black rounded-lg"
+          />
+
+          <p className="mt-2">{reel.caption}</p>
+
+          <p className="text-sm text-gray-500">
+            Duration: {reel.duration_seconds}s
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
       </main>
     </div>
   );

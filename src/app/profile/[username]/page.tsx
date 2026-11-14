@@ -1,6 +1,6 @@
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 export const instant = false;
 interface Props {
   params: Promise<{ username: string }>;
@@ -12,6 +12,7 @@ interface UserProfile {
   display_name: string | null;
   bio: string | null;
   created_at: string;
+  profile_picture: string;
 }
 
 const mockPosts = [
@@ -28,7 +29,7 @@ export default async function ProfilePage({ params }: Props) {
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/users/${encodeURIComponent(username)}`,
-    { cache: "no-store" }
+    { cache: "no-store" },
   );
 
   if (response.status === 404) {
@@ -45,22 +46,30 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-4xl px-4 py-10">
-
         <section className="flex flex-col gap-8 sm:flex-row sm:items-center sm:gap-16">
-
           {/* Profile Picture Placeholder */}
           <div className="flex justify-center sm:w-1/3">
-            <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-4xl font-bold ring-2 ring-gray-600 ring-offset-4 ring-offset-black">
-              {profile.username.charAt(0).toUpperCase()}
+            <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-4xl font-bold ring-2 ring-gray-600 ring-offset-4 ring-offset-black overflow-hidden">
+              {profile.profile_picture ? (
+                <Image
+                  src={profile.profile_picture}
+                  alt={`${profile.username}'s profile picture`}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-4xl font-bold">
+                  {profile.username[0].toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Profile Information */}
           <div className="flex-1">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-start">
-              <h1 className="text-2xl font-normal">
-                {profile.username}
-              </h1>
+              <h1 className="text-2xl font-normal">{profile.username}</h1>
 
               <Link
                 href="/edit-profile"
@@ -72,9 +81,15 @@ export default async function ProfilePage({ params }: Props) {
 
             {/* Stats */}
             <div className="my-6 flex justify-center gap-8 text-sm sm:justify-start sm:gap-10">
-              <p><strong>0</strong> posts</p>
-              <p><strong>0</strong> followers</p>
-              <p><strong>0</strong> following</p>
+              <p>
+                <strong>0</strong> posts
+              </p>
+              <p>
+                <strong>0</strong> followers
+              </p>
+              <p>
+                <strong>0</strong> following
+              </p>
             </div>
 
             {/* Bio */}
@@ -112,7 +127,6 @@ export default async function ProfilePage({ params }: Props) {
             </div>
           ))}
         </section>
-
       </div>
     </main>
   );

@@ -18,7 +18,7 @@ export async function GET(request:NextRequest,{ params }: Props) {
     }
 
     const result = await pool.query(
-      `SELECT id, username, display_name, bio, created_at
+      `SELECT *
        FROM users
        WHERE LOWER(username) = LOWER($1)`,
       [username]
@@ -30,7 +30,13 @@ export async function GET(request:NextRequest,{ params }: Props) {
         { status: 404 }
       );
     }
+    const user = result.rows[0];
 
+    const profilePicture = user.profile_picture
+      ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString("base64")}`
+      : null;
+
+    user.profile_picture = profilePicture
     return NextResponse.json({
       user: result.rows[0],
     });
