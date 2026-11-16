@@ -130,49 +130,63 @@ export default function Comments({ postId }: Props) {
   }
 
   return (
-    <section className="w-full max-w-xl mt-8">
-      <h2 className="text-xl font-semibold mb-4">
-        Comments ({comments.length})
-      </h2>
+    <section className="h-full min-h-0 w-full flex flex-col bg-[#121212] text-white">
+      {/* Scrollable comments area */}
+<div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4">
+  {loading ? (
+    <p className="text-sm text-gray-500 text-center py-6">
+      Loading comments...
+    </p>
+  ) : comments.length === 0 ? (
+    <div className="flex h-full flex-col items-center justify-center text-center">
+      <p className="text-sm font-semibold">No comments yet</p>
+      <p className="text-xs text-gray-500 mt-1">
+        Start the conversation.
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-5">
+      {comments.map((comment) => (
+        <div key={comment.id} className="flex gap-3">
+          <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[1px]">
+            <div className="w-full h-full rounded-full bg-[#242424] flex items-center justify-center text-xs font-semibold">
+              {comment.username?.[0]?.toUpperCase() ?? "U"}
+            </div>
+          </div>
 
-      {loading ? (
-        <p className="text-gray-500">Loading comments...</p>
-      ) : (
-        <div className="space-y-4">
-          {comments.length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              No comments yet. Be the first to comment!
-            </p>
-          ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="border-b pb-3">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm">@{comment.username}</p>
-
-                  {user?.id === comment.user_id && (
-                    <button
-                      onClick={() => handleDelete(comment.id)}
-                      className="text-red-500 text-xs hover:text-red-700"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-
-                <p className="text-gray-700 mt-1 whitespace-pre-wrap break-words">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm break-all">
+                <span className="font-semibold mr-2">
+                  @{comment.username}
+                </span>
+                <span className="text-gray-200 whitespace-pre-wrap break-words">
                   {comment.content}
-                </p>
+                </span>
+              </p>
 
-                <p className="text-xs text-gray-400 mt-1">
-                  {new Date(comment.created_at).toLocaleString()}
-                </p>
-              </div>
-            ))
-          )}
+              {user?.id === comment.user_id && (
+                <button
+                  onClick={() => handleDelete(comment.id)}
+                  className="shrink-0 text-xs text-gray-500 hover:text-red-400"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+
+            <p className="text-[11px] text-gray-500 mt-1">
+              {new Date(comment.created_at).toLocaleString()}
+            </p>
+          </div>
         </div>
-      )}
+      ))}
+    </div>
+  )}
+</div>
+      
 
-      <div className="mt-6">
+      <div className="sticky bottom-0 mt-auto bg-[#121212] p-3 border-t border-[#262626]">
         {authenticated ? (
           <form onSubmit={handleSubmit} className="space-y-3">
             <textarea

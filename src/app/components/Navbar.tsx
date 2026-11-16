@@ -68,7 +68,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="border-b px-6 py-4 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full flex items-center justify-between p-4 bg-black border-b border-[#262626]">
       <Link href="/" className="text-xl font-bold">
         Instagram Clone
       </Link>

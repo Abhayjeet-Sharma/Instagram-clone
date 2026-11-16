@@ -14,18 +14,105 @@ const ALLOWED_TYPES = [
 
 const CLOUDINARY_FOLDER = "instagram-clone/reels";
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
   try {
-    const result = await pool.query(`
-      SELECT *
+    const { searchParams } = new URL(request.url);
+
+    const limitParam = searchParams.get("limit");
+    const cursorCreatedAt = searchParams.get("cursorCreatedAt");
+    const cursorId = searchParams.get("cursorId");
+
+    const limit = limitParam ? Number(limitParam) : 10;
+
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      return NextResponse.json(
+        { error: "Invalid limit" },
+        { status: 400 }
+      );
+    }
+
+    // Cursor parameters must be provided together.
+    if (
+      (cursorCreatedAt && !cursorId) ||
+      (!cursorCreatedAt && cursorId)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid cursor" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      cursorId &&
+      !/^[1-9]\d*$/.test(cursorId)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid cursor ID" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      cursorCreatedAt &&
+      !Number.isFinite(Date.parse(cursorCreatedAt))
+    ) {
+      return NextResponse.json(
+        { error: "Invalid cursor timestamp" },
+        { status: 400 }
+      );
+    }
+
+    const result = await pool.query(
+      `SELECT
+        id,
+        user_id,
+        caption,
+        content_type,
+        image_type,
+        image_size,
+        video_url,
+        thumbnail_url,
+        video_type,
+        video_size,
+        duration_seconds,
+        views_count,
+        created_at
       FROM posts
-      ORDER BY created_at DESC
-    `);
+      WHERE
+        ($1::timestamptz IS NULL OR
+         (created_at, id) < ($1::timestamptz, $2::bigint))
+      ORDER BY created_at DESC, id DESC
+      LIMIT $3`,
+      [
+        cursorCreatedAt,
+        cursorId,
+        limit + 1
+      ]
+    );
+
+    const hasMore = result.rows.length > limit;
+
+    // Fetch one extra row to determine whether another page exists.
+    const posts = result.rows.slice(0, limit);
+
+    const lastPost = posts[posts.length - 1];
+
+    const nextCursor =
+      hasMore && lastPost
+        ? {
+            createdAt: lastPost.created_at,
+            id: String(lastPost.id),
+          }
+        : null;
 
     return NextResponse.json({
       success: true,
-      posts: result.rows,
+      posts,
+      nextCursor,
+      hasMore,
     });
+
   } catch (error) {
     console.error("Fetch posts error:", error);
 
@@ -35,6 +122,7 @@ export async function GET() {
     );
   }
 }
+
 
 export async function POST(request: NextRequest) {
   try {
