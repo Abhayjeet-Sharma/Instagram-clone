@@ -2,53 +2,35 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Reels from "./components/Reels";
+import Vidreels from "./components/Vidreels";
 
-interface Post {
-  id: string;
-  caption: string;
-  image_type: string;
-  image_size: string;
-  created_at: string;
-}
-interface Reel {
+export interface Post {
   id: string;
   user_id: string;
   caption: string | null;
-  video_url: string;
+  content_type: "image" | "video";
+
+  // Image fields
+  image_type: string | null;
+  image_size: string | null;
+
+  // Video fields
+  video_url: string | null;
   thumbnail_url: string | null;
-  video_type: string;
-  video_size: string;
-  duration_seconds: string;
+  video_type: string | null;
+  video_size: string | null;
+  duration_seconds: string | null;
   views_count: string;
+
   created_at: string;
+  updated_at: string;
 }
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [reels, setReels] = useState<Reel[]>([]);
-const [reelsLoading, setReelsLoading] = useState(true);
 
-async function fetchReels() {
-  try {
-    const response = await fetch("/api/reels", {
-      cache: "no-store",
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to fetch reels");
-    }
-
-    setReels(data.reels);
-  } catch (error) {
-    console.error("Fetch reels error:", error);
-  } finally {
-    setReelsLoading(false);
-  }
-}
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this post?",
@@ -101,7 +83,7 @@ async function fetchReels() {
 
   useEffect(() => {
     fetchPosts();
-    fetchReels();
+
   }, []);
 
   if (loading) {
@@ -154,37 +136,6 @@ async function fetchReels() {
             ))}
           </div>
         )}
-        {/* Reels Section */}
-<section className="mb-10">
-  <h2 className="text-xl font-semibold mb-4">Reels</h2>
-
-  {reelsLoading ? (
-    <p>Loading reels...</p>
-  ) : reels.length === 0 ? (
-    <p className="text-gray-500">No reels uploaded yet.</p>
-  ) : (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {reels.map((reel) => (
-        <div key={reel.id} className="border rounded-lg p-3">
-          <video
-            src={reel.video_url}
-            poster={reel.thumbnail_url || undefined}
-            controls
-            playsInline
-            preload="metadata"
-            className="w-full aspect-[9/16] object-contain bg-black rounded-lg"
-          />
-
-          <p className="mt-2">{reel.caption}</p>
-
-          <p className="text-sm text-gray-500">
-            Duration: {reel.duration_seconds}s
-          </p>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
       </main>
     </div>
   );
