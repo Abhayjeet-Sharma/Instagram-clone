@@ -1,16 +1,19 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import pool from "@/lib/db";
+import { generateOTP, hashOTP } from "@/lib/otp";
+import { sendVerificationEmail } from "@/lib/email";
 
 const SALT_ROUNDS = 12;
 
 export async function POST(request: NextRequest) {
+  const client = await pool.connect();
+
   try {
     const body = await request.json();
-
     const { username, email, password } = body;
 
-    // Basic input validation
     if (
       typeof username !== "string" ||
       typeof email !== "string" ||
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (!/^[A-Za-z0-9._]{3,30}$/.test(normalizedUsername)) {
       return NextResponse.json(
-        { error: "Username must be 3-30 characters and contain only letters, numbers, dots, and underscores" },
+        { error: "Invalid username" },
         { status: 400 }
       );
     }
@@ -49,27 +52,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Insert user into PostgreSQL
-    const result = await pool.query(
-      `INSERT INTO users (username, email, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING id, username, email, created_at`,
+    const otp = generateOTP();
+    const otpHash = hashOTP(otp);
+
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `INSERT INTO users
+       (username, email, password_hash, is_verified)
+       VALUES ($1, $2, $3, FALSE)
+       RETURNING id, username, email`,
       [normalizedUsername, normalizedEmail, passwordHash]
     );
+
+    const user = result.rows[0];
+
+    await client.query(
+      `INSERT INTO email_verifications
+       (user_id, otp_hash, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`,
+      [user.id, otpHash]
+    );
+
+    await client.query("COMMIT");
+
+    // Send OTP after the database transaction commits
+    await sendVerificationEmail(normalizedEmail, otp);
 
     return NextResponse.json(
       {
         success: true,
-        message: "Account created successfully",
-        user: result.rows[0],
+        message: "Account created. Please verify your email.",
+        email: normalizedEmail,
       },
       { status: 201 }
     );
+
   } catch (error: any) {
-    // PostgreSQL unique constraint violation
+    await client.query("ROLLBACK");
+
     if (error.code === "23505") {
       return NextResponse.json(
         { error: "Username or email already exists" },
@@ -80,8 +103,11 @@ export async function POST(request: NextRequest) {
     console.error("Registration error:", error);
 
     return NextResponse.json(
-      { error: "Something went wrong during registration" },
+      { error: "Registration failed. Please try again." },
       { status: 500 }
     );
+
+  } finally {
+    client.release();
   }
 }

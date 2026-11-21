@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { useRouter } from "next/navigation";
 import Reels from "./components/Reels";
 import { Post } from "./components/Reels";
+import SocketTest from "./components/SocketTest";
 
 interface FeedResponse {
   success: boolean;
@@ -180,9 +181,6 @@ export default function Home() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
-
-      
-
       {posts.length === 0 ? (
         <div className="text-center py-20">
           <h2 className="text-xl font-semibold">
@@ -235,6 +233,7 @@ export default function Home() {
           </div>
         </>
       )}
+      <SocketTest/>
     </main>
   );
 }
