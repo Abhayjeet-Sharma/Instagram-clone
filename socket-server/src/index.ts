@@ -1,14 +1,19 @@
+
 import express from "express";
 import http from "http";
 import cors from "cors";
 import "dotenv/config";
+import { Server } from "socket.io";
 import pool from "./db";
 import { initializeSocket } from "./socket";
 
 const app = express();
 
+const PORT = process.env.PORT || 3001;
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: CLIENT_URL,
   credentials: true,
 }));
 
@@ -16,8 +21,14 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
-// Initialize Socket.IO
-const io = initializeSocket(server);
+const io = new Server(server, {
+  cors: {
+    origin: CLIENT_URL,
+    credentials: true,
+  },
+});
+
+initializeSocket(io);
 
 app.get("/", async (req, res) => {
   try {
@@ -34,8 +45,6 @@ app.get("/", async (req, res) => {
     });
   }
 });
-
-const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
