@@ -1,4 +1,3 @@
-
 "use client";
 
 import LikeButton from "../post/[id]/image/LikeButton";
@@ -25,10 +24,16 @@ export interface Post {
 
 interface Props {
   post: Post;
+  currentUserId?: string | null;
+  onDelete: (id: string) => void | Promise<void>;
+  username:string | null;
 }
 
-export default function Reels({ post }: Props) {
+export default function Reels({ post, currentUserId, onDelete , username}: Props) {
   const postUrl = `/post/${post.id}/image`;
+  const isOwner = Boolean(
+    currentUserId && String(currentUserId) === String(post.user_id)
+  );
 
   const formattedDate = new Date(post.created_at).toLocaleDateString(
     "en-US",
@@ -42,7 +47,6 @@ export default function Reels({ post }: Props) {
   return (
     <article className="w-full min-h-[calc(100svh-64px)] flex items-center justify-center px-3 sm:px-6 py-6">
       <div className="w-full max-w-[1100px] min-h-[650px] md:h-[calc(100svh-120px)] md:min-h-0 md:max-h-[850px] bg-[#121212] border border-[#262626] rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row">
-
         {/* MEDIA SECTION */}
         <div className="w-full md:w-[68%] h-[55vh] md:h-full shrink-0 bg-black flex items-center justify-center overflow-hidden">
           {post.content_type === "video" ? (
@@ -71,19 +75,18 @@ export default function Reels({ post }: Props) {
 
         {/* DETAILS SECTION */}
         <div className="w-full md:w-[32%] min-w-0 min-h-0 flex-1 md:flex-none md:h-full flex flex-col bg-[#121212] text-white">
-
           {/* HEADER */}
           <div className="shrink-0 flex items-center justify-between px-4 py-4 border-b border-[#262626]">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
                 <div className="w-full h-full rounded-full bg-[#121212] flex items-center justify-center font-semibold text-sm">
-                  U
+                  {username?.charAt(0)}
                 </div>
               </div>
 
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate">
-                  User {post.user_id}
+                  {username}
                 </p>
                 <p className="text-sm text-gray-300 truncate">
                   {post.caption || ""}
@@ -94,13 +97,23 @@ export default function Reels({ post }: Props) {
               </div>
             </div>
 
-            <button
-              className="text-gray-400 hover:text-white text-xl px-2"
-              aria-label="More options"
-              type="button"
-            >
-              ···
-            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={() => onDelete(post.id)}
+                className="bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            ) : (
+              <button
+                className="text-gray-400 hover:text-white text-xl px-2"
+                aria-label="More options"
+                type="button"
+              >
+                ···
+              </button>
+            )}
           </div>
 
           {/* COMMENTS SECTION */}

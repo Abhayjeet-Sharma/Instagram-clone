@@ -1,11 +1,8 @@
-
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useRouter } from "next/navigation";
-import Reels from "./components/Reels";
-import { Post } from "./components/Reels";
+import Reels, { Post } from "./components/reels";
 import SocketTest from "./components/SocketTest";
 
 interface FeedResponse {
@@ -18,10 +15,15 @@ interface FeedResponse {
   hasMore: boolean;
 }
 
-export default function Home() {
-  const router = useRouter();
+interface AuthUser {
+  id: string;
+  username:string
+}
 
+export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUsername,setCurrentUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
@@ -39,6 +41,33 @@ export default function Home() {
     threshold: 0,
     rootMargin: "400px",
   });
+
+  // Fetch currently logged-in user so we can check post ownership.
+  useEffect(() => {
+    let active = true;
+
+    async function loadCurrentUser() {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (active) {
+          setCurrentUserId(data.user?.id ? String(data.user.id) : null);
+          setCurrentUsername(data.user?.username ? String(data.user.username):null);
+        }
+      } catch {
+        if (active) {
+          setCurrentUserId(null);
+        }
+      }
+    }
+
+    loadCurrentUser();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const fetchPosts = useCallback(async () => {
     if (requestInProgress.current || !hasMoreRef.current) return;
@@ -82,12 +111,9 @@ export default function Home() {
       cursorRef.current = data.nextCursor;
       hasMoreRef.current = data.hasMore;
       setHasMore(data.hasMore);
-
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong"
+        error instanceof Error ? error.message : "Something went wrong"
       );
     } finally {
       requestInProgress.current = false;
@@ -106,20 +132,6 @@ export default function Home() {
       fetchPosts();
     }
   }, [inView, hasMore, loading, error, fetchPosts]);
-
-  // Refresh the feed to show newly uploaded posts.
-  async function refreshFeed() {
-    if (requestInProgress.current) return;
-
-    cursorRef.current = null;
-    hasMoreRef.current = true;
-
-    setPosts([]);
-    setHasMore(true);
-    setError("");
-
-    await fetchPosts();
-  }
 
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
@@ -146,12 +158,9 @@ export default function Home() {
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== id)
       );
-
     } catch (error) {
       alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong"
+        error instanceof Error ? error.message : "Something went wrong"
       );
     }
   }
@@ -170,6 +179,7 @@ export default function Home() {
       <main className="p-10 text-center">
         <p>{error}</p>
         <button
+          type="button"
           onClick={fetchPosts}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
         >
@@ -193,21 +203,16 @@ export default function Home() {
       ) : (
         <>
           <div className="flex flex-col items-center">
-  {posts.map((post) => (
-    <div key={post.id} className="w-full">
-      <Reels post={post} />
-
-      <div className="flex justify-center pb-6">
-        <button
-          onClick={() => handleDelete(post.id)}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
+            {posts.map((post) => (
+              <Reels
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+                username={currentUsername}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
 
           {/* IntersectionObserver sentinel */}
           <div
@@ -218,12 +223,13 @@ export default function Home() {
 
             {!hasMore && (
               <p className="text-gray-500">
-                You've reached the end!
+                You&apos;ve reached the end!
               </p>
             )}
 
             {error && (
               <button
+                type="button"
                 onClick={fetchPosts}
                 className="text-blue-600"
               >
@@ -233,7 +239,5 @@ export default function Home() {
           </div>
         </>
       )}
-      <SocketTest/>
-    </main>
-  );
+    </main>);
 }
