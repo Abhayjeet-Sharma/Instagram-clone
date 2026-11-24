@@ -145,14 +145,14 @@ export default function Reels({ post, currentUserId, onDelete}: Props) {
 
               <Link
                 href={postUrl}
-                className="text-gray-300 hover:text-gray-500 transition-colors"
+                className="hover:scale-110 transition-transform"
                 aria-label="View comments"
               >
                 <CommentCount postId={post.id} />
               </Link>
             </div>
 
-            <p className="text-xs text-gray-500 mt-4 uppercase tracking-wide">
+            <p className="text-xs text-gray-500 mt-4 uppercase tracking-wide text-right">
               {formattedDate}
             </p>
 

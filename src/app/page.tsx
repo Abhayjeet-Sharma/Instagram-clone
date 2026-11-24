@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import Image from "next/image";
 import Reels, { Post } from "./components/reels";
-import SocketTest from "./components/SocketTest";
 
 interface FeedResponse {
   success: boolean;
@@ -15,25 +16,24 @@ interface FeedResponse {
   hasMore: boolean;
 }
 
-interface AuthUser {
-  id: string;
-  username:string
-}
-
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUsername,setCurrentUsername] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
 
-  // Refs prevent duplicate requests and retain the latest cursor.
+  // Prevent duplicate requests and retain the latest cursor.
   const requestInProgress = useRef(false);
+
   const cursorRef = useRef<{
     createdAt: string;
     id: string;
   } | null>(null);
+
   const hasMoreRef = useRef(true);
 
   // Detect when the user approaches the bottom of the feed.
@@ -42,18 +42,24 @@ export default function Home() {
     rootMargin: "400px",
   });
 
-  // Fetch currently logged-in user so we can check post ownership.
+  // Fetch currently logged-in user.
   useEffect(() => {
     let active = true;
 
     async function loadCurrentUser() {
       try {
-        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const res = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+
         if (!res.ok) return;
+
         const data = await res.json();
+
         if (active) {
-          setCurrentUserId(data.user?.id ? String(data.user.id) : null);
-          setCurrentUsername(data.user?.username ? String(data.user.username):null);
+          setCurrentUserId(
+            data.user?.id ? String(data.user.id) : null
+          );
         }
       } catch {
         if (active) {
@@ -69,15 +75,21 @@ export default function Home() {
     };
   }, []);
 
-  const fetchPosts = useCallback(async () => {
+  // Fetch posts with cursor-based pagination.
+  const fetchPosts = useCallback(async (isInitial = false) => {
     if (requestInProgress.current || !hasMoreRef.current) return;
 
     requestInProgress.current = true;
 
-    try {
-      setLoading(true);
-      setError("");
+    if (isInitial) {
+      setInitialLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
+    setError("");
+
+    try {
       const params = new URLSearchParams({
         limit: "5",
       });
@@ -97,8 +109,8 @@ export default function Home() {
         throw new Error("Failed to fetch posts");
       }
 
+      // Defensive deduplication.
       setPosts((prev) => {
-        // Defensive deduplication.
         const existingIds = new Set(prev.map((post) => post.id));
 
         const newPosts = data.posts.filter(
@@ -111,28 +123,40 @@ export default function Home() {
       cursorRef.current = data.nextCursor;
       hasMoreRef.current = data.hasMore;
       setHasMore(data.hasMore);
+
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Something went wrong"
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
       );
     } finally {
       requestInProgress.current = false;
-      setLoading(false);
+      setInitialLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
   // Initial feed request.
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(true);
   }, [fetchPosts]);
 
   // Fetch another page when the sentinel enters the viewport.
   useEffect(() => {
-    if (inView && hasMore && !loading && !error) {
-      fetchPosts();
+    if (inView && hasMore && !loadingMore && !initialLoading && !error) {
+      fetchPosts(false);
     }
-  }, [inView, hasMore, loading, error, fetchPosts]);
+  }, [
+    inView,
+    hasMore,
+    loadingMore,
+    initialLoading,
+    error,
+    fetchPosts,
+  ]);
 
+  // Delete a post.
   async function handleDelete(id: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this post?"
@@ -158,30 +182,42 @@ export default function Home() {
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== id)
       );
+
     } catch (error) {
       alert(
-        error instanceof Error ? error.message : "Something went wrong"
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
       );
     }
   }
 
-  // Initial loading state only.
-  if (loading && posts.length === 0) {
+  // Initial Luma loading screen.
+  if (initialLoading) {
     return (
-      <main className="p-10 text-center">
-        Loading posts...
+      <main className="min-h-screen bg-black flex items-center justify-center">
+        <Image
+          src="/lumaNeon.png"
+          alt="Luma"
+          width={140}
+          height={50}
+          priority
+          className="animate-pulse object-contain"
+        />
       </main>
     );
   }
 
+  // Initial loading error.
   if (error && posts.length === 0) {
     return (
-      <main className="p-10 text-center">
-        <p>{error}</p>
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <p className="text-gray-400">{error}</p>
+
         <button
           type="button"
-          onClick={fetchPosts}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+          onClick={() => fetchPosts(true)}
+          className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg transition"
         >
           Try again
         </button>
@@ -196,6 +232,7 @@ export default function Home() {
           <h2 className="text-xl font-semibold">
             No posts yet
           </h2>
+
           <p className="text-gray-500 mt-2">
             Upload your first image to get started.
           </p>
@@ -213,24 +250,28 @@ export default function Home() {
             ))}
           </div>
 
-          {/* IntersectionObserver sentinel */}
+          {/* Infinite scroll sentinel */}
           <div
             ref={observerRef}
             className="h-20 flex items-center justify-center"
           >
-            {loading && <p>Loading more posts...</p>}
-
-            {!hasMore && (
-              <p className="text-gray-500">
-                You&apos;ve reached the end!
+            {loadingMore && (
+              <p className="text-gray-400 animate-pulse">
+                Loading more posts...
               </p>
             )}
 
-            {error && (
+            {!hasMore && (
+              <p className="text-gray-500">
+                You've reached the end!
+              </p>
+            )}
+
+            {error && posts.length > 0 && (
               <button
                 type="button"
-                onClick={fetchPosts}
-                className="text-blue-600"
+                onClick={() => fetchPosts(false)}
+                className="text-purple-400 hover:text-purple-300 transition"
               >
                 Failed to load. Try again
               </button>
@@ -238,5 +279,6 @@ export default function Home() {
           </div>
         </>
       )}
-    </main>);
+    </main>
+  );
 }

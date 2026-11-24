@@ -31,15 +31,22 @@ export async function GET(
          comments.content,
          comments.created_at,
          users.id AS user_id,
-         users.username
+         users.username,
+         users.profile_picture,
+         users.profile_picture_type
        FROM comments
        JOIN users ON users.id = comments.user_id
        WHERE comments.post_id = $1
        ORDER BY comments.created_at ASC`,
       [id]
     );
-
-    return NextResponse.json({ comments: result.rows });
+    const comments = result.rows.map((row) => ({
+  ...row,
+  profile_picture: row.profile_picture
+    ? `data:${row.profile_picture_type || 'image/jpeg'};base64,${row.profile_picture.toString('base64')}`
+    : null,
+}));
+    return NextResponse.json({ comments });
   } catch (error) {
     console.error("Fetch comments error:", error);
     return NextResponse.json(

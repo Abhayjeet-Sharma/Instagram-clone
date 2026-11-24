@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Comment {
   id: string;
@@ -9,6 +10,7 @@ interface Comment {
   created_at: string;
   user_id: string;
   username: string;
+  profile_picture:string;
 }
 
 interface Props {
@@ -149,9 +151,22 @@ export default function Comments({ postId }: Props) {
       {comments.map((comment) => (
         <div key={comment.id} className="flex gap-3">
           <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[1px]">
-            <div className="w-full h-full rounded-full bg-[#242424] flex items-center justify-center text-xs font-semibold">
-              {comment.username?.[0]?.toUpperCase() ?? "U"}
-            </div>
+            <div className="w-full h-full rounded-full bg-[#242424] flex items-center justify-center text-xs font-semibold overflow-hidden">
+  {comment.profile_picture ? (
+    <Image
+      src={comment.profile_picture}
+      alt={comment.username || "User avatar"}
+      width={40}
+      height={40}
+      unoptimized
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    comment.username?.[0].toUpperCase()
+  )}
+</div>
+
+
           </div>
 
           <div className="flex-1 min-w-0">

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { TbMessagesFilled } from "react-icons/tb";
+import Image from "next/image";
 
 interface User {
   id: string;
@@ -69,14 +71,21 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full flex items-center justify-between p-4 bg-black border-b border-[#262626]">
-      <Link href="/" className="text-xl font-bold">
-        Instagram Clone
-      </Link>
+      <Link href="/" className="flex items-center gap-2">
+  <Image
+    src="/lumaNeon2.png"
+    alt="Luma"
+    width={100}
+    height={35}
+    priority
+  />
+</Link>
 
       <div className="flex items-center gap-5">
         <Link href="/" className="hover:text-blue-600">
           Feed
         </Link>
+        
 
         {loading ? (
           <span className="text-sm text-gray-500">Loading...</span>
@@ -110,6 +119,9 @@ export default function Navbar() {
             </Link>
           </>
         )}
+        <Link href="/messages" className="hover:text-blue-600 text-4xl text-blue-600">
+          <TbMessagesFilled />
+        </Link>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}

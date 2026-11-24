@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FcLike } from "react-icons/fc";
+import { FcLikePlaceholder } from "react-icons/fc";
 
 interface Props {
   postId: string;
@@ -73,7 +75,7 @@ export default function LikeButton({ postId }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-3 mt-4">
+    <div className="flex items-center gap-3 mt-4 flex-col">
       <button
         onClick={handleLike}
         disabled={loading || !authenticated}
@@ -82,7 +84,7 @@ export default function LikeButton({ postId }: Props) {
         className="text-3xl disabled:opacity-50 transition-transform active:scale-90"
       >
         <span className={isLiked ? "text-red-500" : "text-gray-500"}>
-          {isLiked ? "♥" : "♡"}
+          {isLiked ? <FcLike /> : <FcLikePlaceholder />}
         </span>
       </button>
 
