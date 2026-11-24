@@ -64,37 +64,50 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await pool.query(
-      `SELECT
-        id,
-        user_id,
-        caption,
-        content_type,
-        image_type,
-        image_size,
-        video_url,
-        thumbnail_url,
-        video_type,
-        video_size,
-        duration_seconds,
-        views_count,
-        created_at
-      FROM posts
-      WHERE
-        ($1::timestamptz IS NULL OR
-         (created_at, id) < ($1::timestamptz, $2::bigint))
-      ORDER BY created_at DESC, id DESC
-      LIMIT $3`,
-      [
-        cursorCreatedAt,
-        cursorId,
-        limit + 1
-      ]
-    );
+  `SELECT
+    posts.id,
+    posts.user_id,
+    posts.caption,
+    posts.content_type,
+    posts.image_type,
+    posts.image_size,
+    posts.video_url,
+    posts.thumbnail_url,
+    posts.video_type,
+    posts.video_size,
+    posts.duration_seconds,
+    posts.views_count,
+    posts.created_at,
+
+    users.username,
+    users.profile_picture,
+    users.profile_picture_type
+
+  FROM posts
+  JOIN users ON posts.user_id = users.id
+
+  WHERE
+    ($1::timestamptz IS NULL OR
+     (posts.created_at, posts.id) < ($1::timestamptz, $2::bigint))
+
+  ORDER BY posts.created_at DESC, posts.id DESC
+  LIMIT $3`,
+  [
+    cursorCreatedAt,
+    cursorId,
+    limit + 1
+  ]
+);
 
     const hasMore = result.rows.length > limit;
 
     // Fetch one extra row to determine whether another page exists.
-    const posts = result.rows.slice(0, limit);
+    const posts = result.rows.slice(0,limit).map((post) => ({
+  ...post,
+  profile_picture: post.profile_picture
+    ? `data:${post.profile_picture_type};base64,${post.profile_picture.toString("base64")}`
+    : null,
+}));
 
     const lastPost = posts[posts.length - 1];
 
@@ -105,6 +118,7 @@ export async function GET(request: NextRequest) {
             id: String(lastPost.id),
           }
         : null;
+    
 
     return NextResponse.json({
       success: true,

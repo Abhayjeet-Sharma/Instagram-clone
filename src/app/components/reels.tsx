@@ -4,6 +4,7 @@ import LikeButton from "../post/[id]/image/LikeButton";
 import Link from "next/link";
 import CommentCount from "./CommentCount";
 import Comments from "../post/[id]/image/Comments";
+import Image from "next/image";
 
 export interface Post {
   id: string;
@@ -20,16 +21,18 @@ export interface Post {
   views_count: string;
   created_at: string;
   updated_at: string;
+  profile_picture:String;
+  profile_picture_type:String;
+  username:String;
 }
 
 interface Props {
   post: Post;
   currentUserId?: string | null;
   onDelete: (id: string) => void | Promise<void>;
-  username:string | null;
 }
 
-export default function Reels({ post, currentUserId, onDelete , username}: Props) {
+export default function Reels({ post, currentUserId, onDelete}: Props) {
   const postUrl = `/post/${post.id}/image`;
   const isOwner = Boolean(
     currentUserId && String(currentUserId) === String(post.user_id)
@@ -78,15 +81,27 @@ export default function Reels({ post, currentUserId, onDelete , username}: Props
           {/* HEADER */}
           <div className="shrink-0 flex items-center justify-between px-4 py-4 border-b border-[#262626]">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
-                <div className="w-full h-full rounded-full bg-[#121212] flex items-center justify-center font-semibold text-sm">
-                  {username?.charAt(0)}
-                </div>
-              </div>
+             <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
+  <div className="relative w-full h-full rounded-full bg-[#121212] overflow-hidden flex items-center justify-center">
+    {post.profile_picture ? (
+      <Image
+        src={post.profile_picture}
+        alt={`${post.username}'s profile picture`}
+        fill
+        unoptimized
+        className="object-cover"
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-bold text-white">
+        {post.username?.[0]?.toUpperCase()}
+      </div>
+    )}
+  </div>
+</div>
 
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate">
-                  {username}
+                  {post.username}
                 </p>
                 <p className="text-sm text-gray-300 truncate">
                   {post.caption || ""}

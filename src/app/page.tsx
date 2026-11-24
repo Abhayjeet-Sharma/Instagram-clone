@@ -208,7 +208,6 @@ export default function Home() {
                 key={post.id}
                 post={post}
                 currentUserId={currentUserId}
-                username={currentUsername}
                 onDelete={handleDelete}
               />
             ))}
