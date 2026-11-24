@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -27,8 +28,6 @@ export default function Navbar() {
         const data = await response.json();
 
         if (response.ok && data.authenticated) {
-          // Supports either { authenticated, user } or
-          // { authenticated, id, username, email }.
           setUser(data.user ?? data);
         } else {
           setUser(null);
@@ -52,79 +51,100 @@ export default function Navbar() {
         method: "POST",
       });
 
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
+      if (!response.ok) throw new Error("Logout failed");
 
       setUser(null);
       router.push("/login");
       router.refresh();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong");
+      setError(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
     }
   }
 
-  // Hide the navbar on authentication pages.
   if (pathname === "/login" || pathname === "/register") {
     return null;
   }
 
+  const navLink =
+    "rounded-full px-4 py-2 text-sm font-medium text-white/70 transition-all duration-300 hover:bg-white/10 hover:text-white";
+
   return (
-    <nav className="sticky top-0 z-50 w-full flex items-center justify-between p-4 bg-black border-b border-[#262626]">
-      <Link href="/" className="flex items-center gap-2">
-  <Image
-    src="/lumaNeon2.png"
-    alt="Luma"
-    width={100}
-    height={35}
-    priority
-  />
-</Link>
+    <nav className="sticky top-0 z-50 w-full px-4 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/10 bg-[#160d20]/65 px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
 
-      <div className="flex items-center gap-5">
-        <Link href="/" className="hover:text-blue-600">
-          Feed
+        {/* Logo */}
+        <Link href="/" className="flex shrink-0 items-center">
+          <Image
+            src="/lumaNeon2.png"
+            alt="Luma"
+            width={100}
+            height={35}
+            priority
+            className="object-contain"
+          />
         </Link>
-        
 
-        {loading ? (
-          <span className="text-sm text-gray-500">Loading...</span>
-        ) : user ? (
-          <>
-            <Link href="/upload" className="hover:text-blue-600">
-              Upload
-            </Link>
-            <Link href={`/profile/${encodeURIComponent(user.username)}`}>
-              <span className="font-medium">@{user.username}</span>
-            </Link>
+        {/* Navigation */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/" className={navLink}>
+            Feed
+          </Link>
 
-            <button
-              onClick={handleLogout}
-              className="text-red-600 hover:text-red-800"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className="hover:text-blue-600">
-              Login
-            </Link>
+          {loading ? (
+            <span className="px-3 text-xs text-white/40">Loading...</span>
+          ) : user ? (
+            <>
+              <Link href="/upload" className={navLink}>
+                Upload
+              </Link>
 
-            <Link
-              href="/register"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-            >
-              Register
-            </Link>
-          </>
-        )}
-        <Link href="/messages" className="hover:text-blue-600 text-4xl text-blue-600">
-          <TbMessagesFilled />
-        </Link>
+              <Link
+                href={`/profile/${encodeURIComponent(user.username)}`}
+                className={`${navLink} hidden sm:block`}
+              >
+                @{user.username}
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="rounded-full border border-red-400/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-300 transition-all duration-300 hover:border-red-400/40 hover:bg-red-500/20 hover:text-red-200"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className={navLink}>
+                Login
+              </Link>
+
+              <Link
+                href="/register"
+                className="rounded-full bg-gradient-to-r from-fuchsia-600 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(217,70,239,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(217,70,239,0.45)]"
+              >
+                Register
+              </Link>
+            </>
+          )}
+
+          {/* Messages */}
+          <Link
+            href="/messages"
+            aria-label="Messages"
+            className="ml-1 flex h-10 w-10 items-center justify-center rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 text-xl text-fuchsia-300 transition-all duration-300 hover:border-fuchsia-400/50 hover:bg-fuchsia-500/20 hover:text-fuchsia-200 hover:shadow-[0_0_18px_rgba(217,70,239,0.35)]"
+          >
+            <TbMessagesFilled />
+          </Link>
+        </div>
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && (
+        <p className="mx-auto mt-2 max-w-7xl text-right text-xs text-red-400">
+          {error}
+        </p>
+      )}
     </nav>
   );
 }

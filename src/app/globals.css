@@ -1,1 +1,109 @@
 @import "tailwindcss";
+
+
+html,
+body {
+  min-height: 100%;
+  background: #230923 !important;
+}
+
+.luma-body {
+  position: relative;
+  isolation: isolate;
+  background: #230923 !important;
+}
+
+/* Background layer */
+.luma-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  background:
+    radial-gradient(ellipse at 20% 15%, #a51c72 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 35%, #7b239b 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 100%, #65104f 0%, transparent 55%),
+    linear-gradient(135deg, #260a2c, #3b103b, #180a24);
+}
+
+/* Flowing waves */
+.luma-wave {
+  position: absolute;
+  width: 120%;
+  height: 65%;
+  left: -10%;
+  border-radius: 45%;
+  filter: blur(90px);
+  opacity: 0.65;
+}
+
+.luma-wave-one {
+  top: -35%;
+  background: linear-gradient(
+    120deg,
+    #ff38ae,
+    #d946ef,
+    #9333ea,
+    #ff4db8
+  );
+  animation: waveOne 14s ease-in-out infinite alternate;
+}
+
+.luma-wave-two {
+  bottom: -40%;
+  background: linear-gradient(
+    120deg,
+    #ec4899,
+    #a855f7,
+    #f0abfc
+  );
+  opacity: 0.45;
+  animation: waveTwo 18s ease-in-out infinite alternate;
+}
+
+/* Glitter */
+.luma-glitter {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, white 50%, transparent 100%),
+    radial-gradient(2px 2px at 30% 70%, #f9a8d4 50%, transparent 100%),
+    radial-gradient(3px 3px at 70% 30%, white 50%, transparent 100%),
+    radial-gradient(2px 2px at 85% 65%, #e879f9 50%, transparent 100%),
+    radial-gradient(2px 2px at 45% 45%, white 50%, transparent 100%);
+  background-size: 300px 300px;
+  animation: glitter 5s ease-in-out infinite alternate;
+}
+
+@keyframes waveOne {
+  from {
+    transform: rotate(-12deg) translate(-5%, 0) scale(1);
+  }
+  to {
+    transform: rotate(12deg) translate(8%, 10%) scale(1.2);
+  }
+}
+
+@keyframes waveTwo {
+  from {
+    transform: rotate(10deg) translate(5%, 0);
+  }
+  to {
+    transform: rotate(-10deg) translate(-8%, -10%) scale(1.2);
+  }
+}
+
+@keyframes glitter {
+  from { opacity: 0.2; }
+  to { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luma-wave,
+  .luma-glitter {
+    animation: none;
+  }
+}
