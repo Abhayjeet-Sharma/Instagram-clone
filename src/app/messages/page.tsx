@@ -23,7 +23,14 @@ type Message = {
   username: string;
 };
 
+type SearchUser = {
+  id: string;
+  username: string;
+  display_name: string | null;
+};
+
 export default function MessagesPage() {
+  const [suggestions, setSuggestions] = useState<SearchUser[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -31,6 +38,30 @@ export default function MessagesPage() {
   const [username, setUsername] = useState("");
   const [myId, setMyId] = useState("");
   const [loading, setLoading] = useState(true);
+  useEffect(() => {
+  if (username.trim().length < 2) {
+    setSuggestions([]);
+    return;
+  }
+
+  const timer = setTimeout(async () => {
+    try {
+      const response = await fetch(
+        `/api/users/search?q=${encodeURIComponent(username)}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuggestions(data.users);
+      }
+    } catch (error) {
+      console.error("User search error:", error);
+    }
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [username]);
 
   useEffect(() => {
     async function loadConversations() {
@@ -127,14 +158,14 @@ export default function MessagesPage() {
     };
   }, [selected]);
 
-  async function createConversation() {
-    if (!username.trim()) return;
+  async function createConversation(targetUsername = username) {
+    if (!targetUsername.trim()) return;
 
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: targetUsername }),
       });
 
       const data = await response.json();
@@ -159,6 +190,7 @@ export default function MessagesPage() {
       if (conversation) setSelected(conversation);
 
       setUsername("");
+setSuggestions([]);
     } catch (error) {
       console.error(error);
     }
@@ -184,21 +216,51 @@ export default function MessagesPage() {
         <div className="p-5 border-b border-gray-800">
           <h1 className="text-2xl font-bold mb-4">Messages</h1>
 
-          <div className="flex gap-2">
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              className="min-w-0 flex-1 bg-gray-900 rounded-lg px-3 py-2 outline-none"
-            />
+          
+<div className="relative">
+  <div className="flex gap-2">
+    <input
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      placeholder="Search people..."
+      className="min-w-0 flex-1 bg-gray-900 rounded-lg px-3 py-2 outline-none"
+    />
 
-            <button
-              onClick={createConversation}
-              className="bg-blue-600 px-4 rounded-lg"
-            >
-              +
-            </button>
-          </div>
+    <button
+      onClick={() => createConversation()}
+      className="bg-blue-600 px-4 rounded-lg"
+    >
+      +
+    </button>
+  </div>
+
+  {suggestions.length > 0 && (
+    <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-[#181818] border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+      {suggestions.map((person) => (
+        <button
+          key={person.id}
+          onClick={() => createConversation(person.username)}
+          className="w-full flex flex-col items-start px-4 py-3 hover:bg-gray-800 text-left"
+        >
+          <span className="font-semibold">
+            {person.display_name || person.username}
+          </span>
+
+          <span className="text-sm text-gray-400">
+            @{person.username}
+          </span>
+        </button>
+      ))}
+    </div>
+  )}
+
+  {username.trim().length >= 2 && suggestions.length === 0 && (
+    <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-[#181818] border border-gray-700 rounded-xl p-3 text-sm text-gray-400">
+      No users found
+    </div>
+  )}
+</div>
+
         </div>
 
         <div className="flex-1 overflow-y-auto">
